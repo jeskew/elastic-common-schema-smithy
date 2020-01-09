@@ -1,0 +1,5 @@
+software.jsq.ecs.plugins.DocumentationTraitPlugin
+software.jsq.ecs.plugins.EnumTraitPlugin
+software.jsq.ecs.plugins.JsonNameTraitPlugin
+software.jsq.ecs.plugins.RequiredTraitPlugin
+software.jsq.ecs.plugins.TagsTraitPlugin

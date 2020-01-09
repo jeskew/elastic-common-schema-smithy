@@ -1,5 +1,6 @@
 package software.jsq.ecs;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
@@ -8,11 +9,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import software.amazon.smithy.model.Model;
-import software.amazon.smithy.model.SourceLocation;
 import software.amazon.smithy.model.loader.ModelAssembler;
 import software.amazon.smithy.model.loader.Prelude;
 import software.amazon.smithy.model.shapes.ListShape;
@@ -21,10 +22,6 @@ import software.amazon.smithy.model.shapes.MemberShape;
 import software.amazon.smithy.model.shapes.Shape;
 import software.amazon.smithy.model.shapes.ShapeId;
 import software.amazon.smithy.model.shapes.StructureShape;
-import software.amazon.smithy.model.traits.DocumentationTrait;
-import software.amazon.smithy.model.traits.EnumConstantBody;
-import software.amazon.smithy.model.traits.EnumTrait;
-import software.amazon.smithy.model.traits.RequiredTrait;
 import software.amazon.smithy.model.validation.ValidatedResult;
 import software.amazon.smithy.utils.Pair;
 import software.jsq.ecs.model.FieldSchema;
@@ -66,6 +63,14 @@ final class SmithyModelBuilder {
             new Pair<>("user", Collections.singletonList("id")),
             new Pair<>("vulnerability", Collections.singletonList("category")))
             .collect(Collectors.groupingBy(Pair::getLeft, Collectors.mapping(Pair::getRight, Collectors.toList())));
+
+    private static final List<ToSmithyExtension> PLUGINS;
+
+    static {
+        List<ToSmithyExtension> list = new ArrayList<>();
+        ServiceLoader.load(ToSmithyExtension.class, SmithyModelBuilder.class.getClassLoader()).forEach(list::add);
+        PLUGINS = Collections.unmodifiableList(list);
+    }
 
     private final String namespace;
     private final String rootShapeName;
@@ -146,10 +151,10 @@ final class SmithyModelBuilder {
     }
 
     private ShapeId fromSchema(Schema schema) {
-        final String shapeName = titleCase(schema.getRoot()
+        final String shapeName = schema.getRoot()
                 .filter(Boolean::booleanValue)
                 .map(t -> rootShapeName)
-                .orElseGet(schema::getTitle));
+                .orElseGet(() -> titleCase(schema.getTitle()));
 
         ShapeId schemaRoot = ShapeId.fromParts(namespace, shapeName);
         indexBuilder.computeIfAbsent(schemaRoot, sid -> fromSchema(sid, schema));
@@ -293,35 +298,41 @@ final class SmithyModelBuilder {
     private StructureShape fromFields(StructureShape target, List<FieldSchema> members) {
         StructureShape.Builder builder = target.toBuilder();
         for (FieldSchema field : members) {
-            String sanitizedName = field.getName().replaceAll("[^a-zA-Z0-9]", "_");
+            String sanitizedName = Arrays.stream(field.getName().split("[^a-zA-Z0-9]+"))
+                    .filter(str -> !str.isEmpty())
+                    .map(str -> str.substring(0, 1).toUpperCase() + str.substring(1).toLowerCase())
+                    .collect(Collectors.joining());
             Pair<ShapeId, Set<Shape>> converted = fromFieldSchema(ShapeId.fromParts(target.getId().getNamespace(),
-                    target.getId().getName() + titleCase(sanitizedName)), field);
+                    target.getId().getName() + sanitizedName), field);
             converted.getRight().forEach(s -> indexBuilder.put(s.getId(), s));
 
-            MemberShape.Builder memberBuilder = MemberShape.builder()
-                    .target(converted.getLeft())
-                    .id(target.getId().withMember(sanitizedName))
-                    .addTrait(new DocumentationTrait(field.getDescription().trim(), SourceLocation.NONE));
-
-            field.getAllowedValues()
-                    .map(values -> {
-                        EnumTrait.Builder enumBuilder = EnumTrait.builder();
-                        values.forEach(value -> enumBuilder.addEnum(value.getName(), EnumConstantBody.builder()
-                                .documentation(value.getDescription().trim())
-                                .build()));
-                        return enumBuilder.build();
-                    })
-                    .ifPresent(memberBuilder::addTrait);
-
-            field.getRequired()
-                    .filter(Boolean::booleanValue)
-                    .map(b -> new RequiredTrait())
-                    .ifPresent(memberBuilder::addTrait);
-
-            builder.addMember(memberBuilder.build()).build();
+            builder.addMember(applyPlugins(
+                    MemberShape.builder()
+                            .target(converted.getLeft())
+                            .id(target.getId().withMember(
+                                    // ensure member name is lowerCamelCase
+                                    sanitizedName.substring(0, 1).toLowerCase() + sanitizedName.substring(1)))
+                            .build(),
+                    field));
         }
 
         return builder.build();
+    }
+
+    private static StructureShape applyPlugins(StructureShape structureShape, Schema schema) {
+        for (ToSmithyExtension plugin : PLUGINS) {
+            structureShape = plugin.updateStructureForSchema(structureShape, schema);
+        }
+
+        return structureShape;
+    }
+
+    private static MemberShape applyPlugins(MemberShape memberShape, FieldSchema fieldSchema) {
+        for (ToSmithyExtension plugin : PLUGINS) {
+            memberShape = plugin.updateMemberForField(memberShape, fieldSchema);
+        }
+
+        return memberShape;
     }
 
     private static Pair<ShapeId, Set<Shape>> forScalar(String shapeName) {
@@ -329,10 +340,7 @@ final class SmithyModelBuilder {
     }
 
     private static StructureShape fromSchema(ShapeId id, Schema schema) {
-        return StructureShape.builder()
-                .id(id)
-                .addTrait(new DocumentationTrait(schema.getDescription().trim(), SourceLocation.NONE))
-                .build();
+        return applyPlugins(StructureShape.builder().id(id).build(), schema);
     }
 
     private static String titleCase(String toCapitalize) {
