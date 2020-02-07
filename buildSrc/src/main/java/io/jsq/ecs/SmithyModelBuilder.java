@@ -37,7 +37,7 @@ final class SmithyModelBuilder {
     // is no indication in the schema for when a field **should** be a collection. For example, the "tags" member of the
     // root shape has a type of "keyword," but the documentation describes the field as a list of strings. A manifest of
     // which fields are to be converted to lists in the smithy model output is maintained in the static fields below.
-    // TODO rip this out when https://github.com/elastic/ecs/pull/661 lands
+    // TODO rip this out when ECS 1.5 is released
     private static final Set<List<String>> ROOT_SHAPE_LIST_MEMBERS
             = Collections.singleton(Collections.singletonList("tags"));
     private static final Map<String, List<List<String>>> NESTED_LIST_MEMBERS = Stream.of(
@@ -45,7 +45,6 @@ final class SmithyModelBuilder {
             new Pair<>("dns", Collections.singletonList("header_flags")),
             new Pair<>("dns", Collections.singletonList("answers")),
             new Pair<>("dns", Collections.singletonList("resolved_ip")),
-            new Pair<>("error", Collections.singletonList("message")),
             new Pair<>("event", Collections.singletonList("category")),
             new Pair<>("event", Collections.singletonList("type")),
             new Pair<>("host", Collections.singletonList("ip")),
@@ -54,7 +53,9 @@ final class SmithyModelBuilder {
             new Pair<>("observer", Collections.singletonList("mac")),
             new Pair<>("process", Collections.singletonList("args")),
             new Pair<>("process", Arrays.asList("parent", "args")),
+            new Pair<>("related", Collections.singletonList("hash")),
             new Pair<>("related", Collections.singletonList("ip")),
+            new Pair<>("related", Collections.singletonList("user")),
             new Pair<>("threat", Arrays.asList("tactic", "name")),
             new Pair<>("threat", Arrays.asList("tactic", "id")),
             new Pair<>("threat", Arrays.asList("tactic", "reference")),
@@ -64,7 +65,6 @@ final class SmithyModelBuilder {
             new Pair<>("tls", Arrays.asList("client", "supported_ciphers")),
             new Pair<>("tls", Arrays.asList("client", "certificate_chain")),
             new Pair<>("tls", Arrays.asList("server", "certificate_chain")),
-            new Pair<>("user", Collections.singletonList("id")),
             new Pair<>("vulnerability", Collections.singletonList("category")))
             .collect(Collectors.groupingBy(Pair::getLeft, Collectors.mapping(Pair::getRight, Collectors.toList())));
 
