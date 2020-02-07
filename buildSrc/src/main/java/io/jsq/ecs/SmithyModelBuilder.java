@@ -1,5 +1,6 @@
 package io.jsq.ecs;
 
+import io.jsq.ecs.model.AllowedValue;
 import io.jsq.ecs.model.FieldSchema;
 import io.jsq.ecs.model.ReusabilityDeclaration;
 import io.jsq.ecs.model.Schema;
@@ -24,7 +25,10 @@ import software.amazon.smithy.model.shapes.MapShape;
 import software.amazon.smithy.model.shapes.MemberShape;
 import software.amazon.smithy.model.shapes.Shape;
 import software.amazon.smithy.model.shapes.ShapeId;
+import software.amazon.smithy.model.shapes.StringShape;
 import software.amazon.smithy.model.shapes.StructureShape;
+import software.amazon.smithy.model.traits.EnumConstantBody;
+import software.amazon.smithy.model.traits.EnumTrait;
 import software.amazon.smithy.model.validation.ValidatedResult;
 import software.amazon.smithy.utils.Pair;
 
@@ -213,7 +217,9 @@ final class SmithyModelBuilder {
             case IP:
             case TEXT:
             case KEYWORD:
-                return forScalar("String");
+                return fieldSchema.getAllowedValues()
+                        .map(values -> new Pair<>(id, Collections.singleton(enumShape(id, values))))
+                        .orElseGet(() -> forScalar("String"));
             case DATE:
                 return forScalar("Timestamp");
             case BOOLEAN:
@@ -270,6 +276,22 @@ final class SmithyModelBuilder {
             default:
                 throw new RuntimeException("Unrecognized field type: " + fieldSchema.getType());
         }
+    }
+
+    private Shape enumShape(ShapeId id, List<AllowedValue> allowedValues) {
+        EnumTrait.Builder enumBuilder = EnumTrait.builder();
+        allowedValues.forEach(value -> enumBuilder.addEnum(value.getName(), EnumConstantBody.builder()
+                .name(Arrays.stream(value.getName().split("\\W+"))
+                        .filter(str -> !str.isEmpty())
+                        .map(String::toUpperCase)
+                        .collect(Collectors.joining("_")))
+                .documentation(value.getDescription().trim())
+                .build()));
+
+        return StringShape.builder()
+                .id(id)
+                .addTrait(enumBuilder.build())
+                .build();
     }
 
     private StructureShape fetchStructureShape(ShapeId id) {
