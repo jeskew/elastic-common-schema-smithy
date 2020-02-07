@@ -1,11 +1,10 @@
-package software.jsq.ecs.model;
+package io.jsq.ecs.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 
 @JsonDeserialize(builder = ReusabilityDeclaration.Builder.class)
 public final class ReusabilityDeclaration {

@@ -1,4 +1,4 @@
-package software.jsq.ecs;
+package io.jsq.ecs;
 
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;

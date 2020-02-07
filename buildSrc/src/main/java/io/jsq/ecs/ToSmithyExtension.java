@@ -1,9 +1,9 @@
-package software.jsq.ecs;
+package io.jsq.ecs;
 
+import io.jsq.ecs.model.FieldSchema;
+import io.jsq.ecs.model.Schema;
 import software.amazon.smithy.model.shapes.MemberShape;
 import software.amazon.smithy.model.shapes.StructureShape;
-import software.jsq.ecs.model.FieldSchema;
-import software.jsq.ecs.model.Schema;
 
 /**
  * Represents a plugin for the Elastic Common Schema -> Smithy converter that affects the converted Smithy shape.

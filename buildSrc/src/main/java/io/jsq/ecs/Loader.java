@@ -1,13 +1,13 @@
-package software.jsq.ecs;
+package io.jsq.ecs;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import io.jsq.ecs.model.Schema;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 import software.amazon.smithy.utils.IoUtils;
-import software.jsq.ecs.model.Schema;
 
 final class Loader {
     private static final String PATH_PREFIX = "META-INF/elastic-common-schema";

@@ -1,10 +1,10 @@
 import java.io.PrintWriter
 
-group = "software.jsq.ecs"
+group = "io.jsq.ecs"
 version = "0.0.1-SNAPSHOT"
 
 plugins {
-    id("software.jsq.ecs.tosmithy")
+    id("io.jsq.ecs.tosmithy")
     java
     maven
 }
@@ -15,7 +15,7 @@ java {
 }
 
 val modelTargetDir = file("${sourceSets["main"].output.resourcesDir}/META-INF/smithy")
-val writeModel = tasks.getByName<software.jsq.ecs.ToSmithyTask>("writeModel") {
+val writeModel = tasks.getByName<io.jsq.ecs.ToSmithyTask>("writeModel") {
     doFirst {
         modelTargetDir.mkdirs()
     }

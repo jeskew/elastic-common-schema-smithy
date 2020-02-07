@@ -1,0 +1,4 @@
+io.jsq.ecs.plugins.DocumentationTraitPlugin
+io.jsq.ecs.plugins.JsonNameTraitPlugin
+io.jsq.ecs.plugins.RequiredTraitPlugin
+io.jsq.ecs.plugins.TagsTraitPlugin

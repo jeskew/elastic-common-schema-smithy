@@ -1,5 +1,8 @@
-package software.jsq.ecs;
+package io.jsq.ecs;
 
+import io.jsq.ecs.model.FieldSchema;
+import io.jsq.ecs.model.ReusabilityDeclaration;
+import io.jsq.ecs.model.Schema;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -24,9 +27,6 @@ import software.amazon.smithy.model.shapes.ShapeId;
 import software.amazon.smithy.model.shapes.StructureShape;
 import software.amazon.smithy.model.validation.ValidatedResult;
 import software.amazon.smithy.utils.Pair;
-import software.jsq.ecs.model.FieldSchema;
-import software.jsq.ecs.model.ReusabilityDeclaration;
-import software.jsq.ecs.model.Schema;
 
 final class SmithyModelBuilder {
     // ECS was designed for Lucene indices, which do not distinguish between single elements and lists thereof, so there

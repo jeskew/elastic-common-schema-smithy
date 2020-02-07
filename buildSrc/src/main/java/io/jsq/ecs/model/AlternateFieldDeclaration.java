@@ -1,4 +1,4 @@
-package software.jsq.ecs.model;
+package io.jsq.ecs.model;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;

@@ -1,11 +1,11 @@
-package software.jsq.ecs;
+package io.jsq.ecs;
 
+import io.jsq.ecs.model.Schema;
 import java.util.List;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import software.amazon.smithy.model.Model;
 import software.amazon.smithy.model.validation.ValidatedResult;
-import software.jsq.ecs.model.Schema;
 
 class SmithyModelBuilderTest {
     @Test

@@ -1,11 +1,11 @@
-package software.jsq.ecs.plugins;
+package io.jsq.ecs.plugins;
 
+import io.jsq.ecs.ToSmithyExtension;
+import io.jsq.ecs.model.FieldSchema;
+import io.jsq.ecs.model.Schema;
 import software.amazon.smithy.model.shapes.MemberShape;
 import software.amazon.smithy.model.shapes.StructureShape;
 import software.amazon.smithy.model.traits.DocumentationTrait;
-import software.jsq.ecs.ToSmithyExtension;
-import software.jsq.ecs.model.FieldSchema;
-import software.jsq.ecs.model.Schema;
 
 public final class DocumentationTraitPlugin implements ToSmithyExtension {
     public StructureShape updateStructureForSchema(StructureShape structureShape, Schema schema) {

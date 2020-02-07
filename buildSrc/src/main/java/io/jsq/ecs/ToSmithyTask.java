@@ -1,4 +1,4 @@
-package software.jsq.ecs;
+package io.jsq.ecs;
 
 import java.io.BufferedWriter;
 import java.io.FileOutputStream;
