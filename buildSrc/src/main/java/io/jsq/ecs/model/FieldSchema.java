@@ -28,6 +28,7 @@ public final class FieldSchema {
     private final String outputFormat;
     private final Double outputPrecision;
     private final Integer ignoreAbove;
+    private final List<String> normalize;
 
     private FieldSchema(Builder builder) {
         name = Objects.requireNonNull(builder.name);
@@ -55,6 +56,11 @@ public final class FieldSchema {
         outputFormat = builder.outputFormat;
         outputPrecision = builder.outputPrecision;
         ignoreAbove = builder.ignoreAbove;
+
+        normalize = Optional.ofNullable(builder.normalize)
+                .map(ArrayList::new)
+                .map(Collections::unmodifiableList)
+                .orElse(null);
     }
 
     public static Builder builder() {
@@ -129,6 +135,10 @@ public final class FieldSchema {
         return Optional.ofNullable(ignoreAbove);
     }
 
+    public Optional<List<String>> getNormalize() {
+        return Optional.ofNullable(normalize);
+    }
+
     public Builder toBuilder() {
         Builder builder = builder()
                 .name(getName())
@@ -149,6 +159,7 @@ public final class FieldSchema {
         getOutputFormat().ifPresent(builder::outputFormat);
         getOutputPrecision().ifPresent(builder::outputPrecision);
         getIgnoreAbove().ifPresent(builder::ignoreAbove);
+        getNormalize().ifPresent(builder::normalize);
 
         return builder;
     }
@@ -190,6 +201,7 @@ public final class FieldSchema {
         @JsonProperty("output_format") private String outputFormat;
         @JsonProperty("output_precision") private Double outputPrecision;
         @JsonProperty("ignore_above") private Integer ignoreAbove;
+        private List<String> normalize;
 
         public Builder name(String name) {
             this.name = name;
@@ -273,6 +285,11 @@ public final class FieldSchema {
 
         public Builder ignoreAbove(Integer ignoreAbove) {
             this.ignoreAbove = ignoreAbove;
+            return this;
+        }
+
+        public Builder normalize(List<String> normalize) {
+            this.normalize = normalize;
             return this;
         }
 

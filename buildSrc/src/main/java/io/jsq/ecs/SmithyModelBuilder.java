@@ -33,41 +33,6 @@ import software.amazon.smithy.model.validation.ValidatedResult;
 import software.amazon.smithy.utils.Pair;
 
 final class SmithyModelBuilder {
-    // ECS was designed for Lucene indices, which do not distinguish between single elements and lists thereof, so there
-    // is no indication in the schema for when a field **should** be a collection. For example, the "tags" member of the
-    // root shape has a type of "keyword," but the documentation describes the field as a list of strings. A manifest of
-    // which fields are to be converted to lists in the smithy model output is maintained in the static fields below.
-    // TODO rip this out when ECS 1.5 is released
-    private static final Set<List<String>> ROOT_SHAPE_LIST_MEMBERS
-            = Collections.singleton(Collections.singletonList("tags"));
-    private static final Map<String, List<List<String>>> NESTED_LIST_MEMBERS = Stream.of(
-            new Pair<>("container", Arrays.asList("image", "tag")),
-            new Pair<>("dns", Collections.singletonList("header_flags")),
-            new Pair<>("dns", Collections.singletonList("answers")),
-            new Pair<>("dns", Collections.singletonList("resolved_ip")),
-            new Pair<>("event", Collections.singletonList("category")),
-            new Pair<>("event", Collections.singletonList("type")),
-            new Pair<>("host", Collections.singletonList("ip")),
-            new Pair<>("host", Collections.singletonList("mac")),
-            new Pair<>("observer", Collections.singletonList("ip")),
-            new Pair<>("observer", Collections.singletonList("mac")),
-            new Pair<>("process", Collections.singletonList("args")),
-            new Pair<>("process", Arrays.asList("parent", "args")),
-            new Pair<>("related", Collections.singletonList("hash")),
-            new Pair<>("related", Collections.singletonList("ip")),
-            new Pair<>("related", Collections.singletonList("user")),
-            new Pair<>("threat", Arrays.asList("tactic", "name")),
-            new Pair<>("threat", Arrays.asList("tactic", "id")),
-            new Pair<>("threat", Arrays.asList("tactic", "reference")),
-            new Pair<>("threat", Arrays.asList("technique", "name")),
-            new Pair<>("threat", Arrays.asList("technique", "id")),
-            new Pair<>("threat", Arrays.asList("technique", "reference")),
-            new Pair<>("tls", Arrays.asList("client", "supported_ciphers")),
-            new Pair<>("tls", Arrays.asList("client", "certificate_chain")),
-            new Pair<>("tls", Arrays.asList("server", "certificate_chain")),
-            new Pair<>("vulnerability", Collections.singletonList("category")))
-            .collect(Collectors.groupingBy(Pair::getLeft, Collectors.mapping(Pair::getRight, Collectors.toList())));
-
     private static final List<ToSmithyExtension> PLUGINS;
 
     static {
@@ -81,22 +46,12 @@ final class SmithyModelBuilder {
     private final ShapeId rootId;
     private final Map<ShapeId, Shape> indexBuilder = new HashMap<>();
     private final Map<Pair<String, ShapeId>, List<String>> reuseDirectives = new HashMap<>();
-    private final Set<ShapeId> listShapes;
 
     SmithyModelBuilder(String namespace, String rootShapeName) {
         this.namespace = Objects.requireNonNull(namespace);
         this.rootShapeName = Objects.requireNonNull(rootShapeName);
         rootId = ShapeId.fromParts(namespace, rootShapeName);
         indexBuilder.put(rootId, StructureShape.builder().id(rootId).build());
-
-        listShapes = Stream.concat(
-                ROOT_SHAPE_LIST_MEMBERS.stream()
-                        .map(keySequence -> composeShapeId(rootShapeName, keySequence)),
-                NESTED_LIST_MEMBERS.entrySet().stream()
-                        .flatMap(entry -> entry.getValue().stream()
-                                .map(list -> new Pair<>(entry.getKey(), list)))
-                        .map(entry -> composeShapeId(titleCase(entry.getKey()), entry.getValue())))
-                .collect(Collectors.toSet());
     }
 
     void addSchema(Schema schema) {
@@ -126,12 +81,15 @@ final class SmithyModelBuilder {
         // Apply any reuse directive encountered from schemata
         for (Map.Entry<Pair<String, ShapeId>, List<String>> entry : reuseDirectives.entrySet()) {
             for (String keyOfReusingMember : entry.getValue()) {
-                StructureShape reUser = getRootShape().getMember(keyOfReusingMember)
+                StructureShape reUser = getRootShape();
+                for (String pathElement : keyOfReusingMember.split("\\.")) {
+                    reUser = reUser.getMember(pathElement)
                         .map(MemberShape::getTarget)
                         .map(indexBuilder::get)
                         .flatMap(Shape::asStructureShape)
                         .orElseThrow(() -> new RuntimeException(
                                 "Unable to reuse " + entry.getKey().getLeft() + " under key " + keyOfReusingMember));
+                }
 
                 indexBuilder.put(reUser.getId(), reUser.toBuilder()
                         .addMember(MemberShape.builder()
@@ -194,7 +152,7 @@ final class SmithyModelBuilder {
     }
 
     private Pair<ShapeId, Set<Shape>> fromFieldSchema(ShapeId id, FieldSchema fieldSchema) {
-        if (listShapes.contains(id)) {
+        if (fieldSchema.getNormalize().map(n -> n.contains("array")).orElse(false)) {
             Pair<ShapeId, Set<Shape>> member = singularFromFieldSchema(id, fieldSchema);
             ShapeId targetId = ShapeId.fromParts(id.getNamespace(), id.getName() + "List");
             MemberShape memberShape = MemberShape.builder()
