@@ -32,12 +32,14 @@
       example: "[\"production\", \"env2\"]"
       description: >
         List of keywords used to tag each event.
+      normalize:
+        - array
 
     - name: labels
       level: core
       type: object
       object_type: keyword
-      example: {env: production, application: foo-bar}
+      example: {application: foo-bar, env: production}
       short: Custom key/value pairs.
       description: >
         Custom key/value pairs.

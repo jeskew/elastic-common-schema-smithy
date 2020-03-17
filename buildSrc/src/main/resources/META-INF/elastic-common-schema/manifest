@@ -3,8 +3,10 @@ as.yml
 base.yml
 client.yml
 cloud.yml
+code_signature.yml
 container.yml
 destination.yml
+dll.yml
 dns.yml
 ecs.yml
 error.yml
@@ -15,12 +17,14 @@ group.yml
 hash.yml
 host.yml
 http.yml
+interface.yml
 log.yml
 network.yml
 observer.yml
 organization.yml
 os.yml
 package.yml
+pe.yml
 process.yml
 registry.yml
 related.yml
@@ -34,4 +38,5 @@ tracing.yml
 url.yml
 user.yml
 user_agent.yml
+vlan.yml
 vulnerability.yml
