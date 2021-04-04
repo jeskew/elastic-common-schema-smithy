@@ -3,6 +3,7 @@ package io.jsq.ecs;
 import io.jsq.ecs.model.AllowedValue;
 import io.jsq.ecs.model.FieldSchema;
 import io.jsq.ecs.model.ReusabilityDeclaration;
+import io.jsq.ecs.model.ReuseExpectation;
 import io.jsq.ecs.model.Schema;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -45,7 +46,7 @@ final class SmithyModelBuilder {
     private final String rootShapeName;
     private final ShapeId rootId;
     private final Map<ShapeId, Shape> indexBuilder = new HashMap<>();
-    private final Map<Pair<String, ShapeId>, List<String>> reuseDirectives = new HashMap<>();
+    private final Map<Pair<String, ShapeId>, List<ReuseExpectation>> reuseDirectives = new HashMap<>();
 
     SmithyModelBuilder(String namespace, String rootShapeName) {
         this.namespace = Objects.requireNonNull(namespace);
@@ -79,22 +80,22 @@ final class SmithyModelBuilder {
 
     ValidatedResult<Model> build() {
         // Apply any reuse directive encountered from schemata
-        for (Map.Entry<Pair<String, ShapeId>, List<String>> entry : reuseDirectives.entrySet()) {
-            for (String keyOfReusingMember : entry.getValue()) {
+        for (Map.Entry<Pair<String, ShapeId>, List<ReuseExpectation>> entry : reuseDirectives.entrySet()) {
+            for (ReuseExpectation reuseExpectation : entry.getValue()) {
                 StructureShape reUser = getRootShape();
-                for (String pathElement : keyOfReusingMember.split("\\.")) {
+                for (String pathElement : reuseExpectation.getAt().split("\\.")) {
                     reUser = reUser.getMember(pathElement)
                         .map(MemberShape::getTarget)
                         .map(indexBuilder::get)
                         .flatMap(Shape::asStructureShape)
                         .orElseThrow(() -> new RuntimeException(
-                                "Unable to reuse " + entry.getKey().getLeft() + " under key " + keyOfReusingMember));
+                                "Unable to reuse " + entry.getKey().getLeft() + " under key " + reuseExpectation.getAt()));
                 }
 
                 indexBuilder.put(reUser.getId(), reUser.toBuilder()
                         .addMember(MemberShape.builder()
                                 .target(entry.getKey().getRight())
-                                .id(reUser.getId().withMember(entry.getKey().getLeft()))
+                                .id(reUser.getId().withMember(reuseExpectation.getAs().orElse(entry.getKey().getLeft())))
                                 .build())
                         .build());
             }
@@ -185,6 +186,8 @@ final class SmithyModelBuilder {
             case LONG:
                 return forScalar("Long");
             case FLOAT:
+                return forScalar("Float");
+            case SCALED_FLOAT:
                 return forScalar("Float");
             case INTEGER:
                 return forScalar("Integer");

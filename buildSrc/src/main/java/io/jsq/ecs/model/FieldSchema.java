@@ -3,8 +3,6 @@ package io.jsq.ecs.model;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -29,6 +27,8 @@ public final class FieldSchema {
     private final Double outputPrecision;
     private final Integer ignoreAbove;
     private final List<String> normalize;
+    private final Integer scalingFactor;
+    private final String beta;
 
     private FieldSchema(Builder builder) {
         name = Objects.requireNonNull(builder.name);
@@ -37,12 +37,10 @@ public final class FieldSchema {
         description = Objects.requireNonNull(builder.description);
 
         allowedValues = Optional.ofNullable(builder.allowedValues)
-                .map(ArrayList::new)
-                .map(Collections::unmodifiableList)
+                .map(List::copyOf)
                 .orElse(null);
         multiFields = Optional.ofNullable(builder.multiFields)
-                .map(ArrayList::new)
-                .map(Collections::unmodifiableList)
+                .map(List::copyOf)
                 .orElse(null);
 
         required = builder.required;
@@ -58,9 +56,11 @@ public final class FieldSchema {
         ignoreAbove = builder.ignoreAbove;
 
         normalize = Optional.ofNullable(builder.normalize)
-                .map(ArrayList::new)
-                .map(Collections::unmodifiableList)
+                .map(List::copyOf)
                 .orElse(null);
+
+        scalingFactor = builder.scalingFactor;
+        beta = builder.beta;
     }
 
     public static Builder builder() {
@@ -139,6 +139,14 @@ public final class FieldSchema {
         return Optional.ofNullable(normalize);
     }
 
+    public Optional<Integer> getScalingFactor() {
+        return Optional.ofNullable(scalingFactor);
+    }
+
+    public Optional<String> getBeta() {
+        return Optional.ofNullable(beta);
+    }
+
     public Builder toBuilder() {
         Builder builder = builder()
                 .name(getName())
@@ -160,6 +168,8 @@ public final class FieldSchema {
         getOutputPrecision().ifPresent(builder::outputPrecision);
         getIgnoreAbove().ifPresent(builder::ignoreAbove);
         getNormalize().ifPresent(builder::normalize);
+        getScalingFactor().ifPresent(builder::scalingFactor);
+        getBeta().ifPresent(builder::beta);
 
         return builder;
     }
@@ -174,7 +184,8 @@ public final class FieldSchema {
         @JsonProperty("geo_point") GEO_POINT,
         @JsonProperty("integer") INTEGER,
         @JsonProperty("boolean") BOOLEAN,
-        @JsonProperty("float") FLOAT
+        @JsonProperty("float") FLOAT,
+        @JsonProperty("scaled_float") SCALED_FLOAT
     }
 
     public enum Level {
@@ -202,6 +213,8 @@ public final class FieldSchema {
         @JsonProperty("output_precision") private Double outputPrecision;
         @JsonProperty("ignore_above") private Integer ignoreAbove;
         private List<String> normalize;
+        @JsonProperty("scaling_factor") private Integer scalingFactor;
+        private String beta;
 
         public Builder name(String name) {
             this.name = name;
@@ -290,6 +303,16 @@ public final class FieldSchema {
 
         public Builder normalize(List<String> normalize) {
             this.normalize = normalize;
+            return this;
+        }
+
+        public Builder scalingFactor(Integer scalingFactor) {
+            this.scalingFactor = scalingFactor;
+            return this;
+        }
+
+        public Builder beta(String beta) {
+            this.beta = beta;
             return this;
         }
 

@@ -5,15 +5,18 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 @JsonDeserialize(builder = ReusabilityDeclaration.Builder.class)
 public final class ReusabilityDeclaration {
     private final Boolean topLevel;
-    private final List<String> expected;
+    private final List<ReuseExpectation> expected;
+    private final Integer order;
 
     private ReusabilityDeclaration(Builder builder) {
         topLevel = Objects.requireNonNull(builder.topLevel);
-        expected = Objects.requireNonNull(builder.expected);
+        expected = List.copyOf(Objects.requireNonNull(builder.expected));
+        order = builder.order;
     }
 
     public static Builder builder() {
@@ -24,28 +27,43 @@ public final class ReusabilityDeclaration {
         return topLevel;
     }
 
-    public List<String> getExpected() {
+    public List<ReuseExpectation> getExpected() {
         return expected;
     }
 
+    public Optional<Integer> getOrder() {
+        return Optional.ofNullable(order);
+    }
+
     public Builder toBuilder() {
-        return builder()
-                .expected(getExpected())
-                .topLevel(getTopLevel());
+        Builder builder = builder()
+            .expected(getExpected())
+            .topLevel(getTopLevel());
+
+        getOrder().ifPresent(builder::order);
+
+        return builder;
+
     }
 
     @JsonPOJOBuilder(withPrefix = "")
     public static final class Builder {
         @JsonProperty("top_level") private Boolean topLevel;
-        private List<String> expected;
+        private List<ReuseExpectation> expected;
+        private Integer order;
 
         public Builder topLevel(Boolean topLevel) {
             this.topLevel = topLevel;
             return this;
         }
 
-        public Builder expected(List<String> expected) {
+        public Builder expected(List<ReuseExpectation> expected) {
             this.expected = expected;
+            return this;
+        }
+
+        public Builder order(Integer order) {
+            this.order = order;
             return this;
         }
 

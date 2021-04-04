@@ -47,6 +47,7 @@
     - name: next_protocol
       type: keyword
       level: extended
+      short: String indicating the protocol being tunneled.
       description: >
         String indicating the protocol being tunneled. Per the values in the IANA registry
         (https://www.iana.org/assignments/tls-extensiontype-values/tls-extensiontype-values.xhtml#alpn-protocol-ids),
@@ -62,16 +63,17 @@
     - name: client.server_name
       type: keyword
       level: extended
+      short: Hostname the client is trying to connect to. Also called the SNI.
       description: >
-        Also called an SNI, this tells the server which hostname to which the client is attempting to connect. When
-        this value is available, it should get copied to `destination.domain`.
+        Also called an SNI, this tells the server which hostname to which the client is attempting to connect to.
+        When this value is available, it should get copied to `destination.domain`.
       example: "www.elastic.co"
 
     - name: client.supported_ciphers
       type: keyword
       level: extended
       description: Array of ciphers offered by the client during the client hello.
-      example: ["TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384", "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384", "..."]
+      example: "[\"TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384\", \"TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384\", \"...\"]"
       normalize:
         - array
 
@@ -79,13 +81,13 @@
       type: keyword
       level: extended
       description: Distinguished name of subject of the x.509 certificate presented by the client.
-      example: "CN=myclient, OU=Documentation Team, DC=mydomain, DC=com"
+      example: "CN=myclient, OU=Documentation Team, DC=example, DC=com"
 
     - name: client.issuer
       type: keyword
       level: extended
       description: Distinguished name of subject of the issuer of the x.509 certificate presented by the client.
-      example: "CN=MyDomain Root CA, OU=Infrastructure Team, DC=mydomain, DC=com"
+      example: "CN=Example Root CA, OU=Infrastructure Team, DC=example, DC=com"
 
     - name: client.not_before
       type: date
@@ -102,17 +104,19 @@
     - name: client.certificate_chain
       type: keyword
       level: extended
+      short: Array of PEM-encoded certificates that make up the certificate chain offered by the client.
       description: >
         Array of PEM-encoded certificates that make up the certificate chain offered by the client. This is
         usually mutually-exclusive of `client.certificate` since that value should be the first certificate
         in the chain.
-      example: ["MII...", "MII..."]
+      example: "[\"MII...\", \"MII...\"]"
       normalize:
         - array
 
     - name: client.certificate
       type: keyword
       level: extended
+      short: PEM-encoded stand-alone certificate offered by the client.
       description: >
         PEM-encoded stand-alone certificate offered by the client. This is usually mutually-exclusive of
         `client.certificate_chain` since this value also exists in that list.
@@ -121,6 +125,7 @@
     - name: client.hash.md5
       type: keyword
       level: extended
+      short: Certificate fingerprint using the MD5 digest of DER-encoded version of certificate offered by the client.
       description: >
         Certificate fingerprint using the MD5 digest of DER-encoded version of certificate offered by the client.
         For consistency with other hash values, this value should be formatted as an uppercase hash.
@@ -129,6 +134,8 @@
     - name: client.hash.sha1
       type: keyword
       level: extended
+      short: >
+        Certificate fingerprint using the SHA1 digest of DER-encoded version of certificate offered by the client.
       description: >
         Certificate fingerprint using the SHA1 digest of DER-encoded version of certificate offered by the client.
         For consistency with other hash values, this value should be formatted as an uppercase hash.
@@ -137,6 +144,7 @@
     - name: client.hash.sha256
       type: keyword
       level: extended
+      short: Certificate fingerprint using the SHA256 digest of DER-encoded version of certificate offered by the client.
       description: >
         Certificate fingerprint using the SHA256 digest of DER-encoded version of certificate offered by the client.
         For consistency with other hash values, this value should be formatted as an uppercase hash.
@@ -152,13 +160,13 @@
       type: keyword
       level: extended
       description: Subject of the x.509 certificate presented by the server.
-      example: "CN=www.mydomain.com, OU=Infrastructure Team, DC=mydomain, DC=com"
+      example: "CN=www.example.com, OU=Infrastructure Team, DC=example, DC=com"
 
     - name: server.issuer
       type: keyword
       level: extended
       description: Subject of the issuer of the x.509 certificate presented by the server.
-      example: "CN=MyDomain Root CA, OU=Infrastructure Team, DC=mydomain, DC=com"
+      example: "CN=Example Root CA, OU=Infrastructure Team, DC=example, DC=com"
 
     - name: server.not_before
       type: date
@@ -175,17 +183,19 @@
     - name: server.certificate_chain
       type: keyword
       level: extended
+      short: Array of PEM-encoded certificates that make up the certificate chain offered by the server.
       description: >
         Array of PEM-encoded certificates that make up the certificate chain offered by the server. This is
         usually mutually-exclusive of `server.certificate` since that value should be the first certificate
         in the chain.
-      example: ["MII...", "MII..."]
+      example: "[\"MII...\", \"MII...\"]"
       normalize:
         - array
 
     - name: server.certificate
       type: keyword
       level: extended
+      short: PEM-encoded stand-alone certificate offered by the server.
       description: >
         PEM-encoded stand-alone certificate offered by the server. This is usually mutually-exclusive of
         `server.certificate_chain` since this value also exists in that list.
@@ -194,6 +204,7 @@
     - name: server.hash.md5
       type: keyword
       level: extended
+      short: Certificate fingerprint using the MD5 digest of DER-encoded version of certificate offered by the server.
       description: >
         Certificate fingerprint using the MD5 digest of DER-encoded version of certificate offered by the server.
         For consistency with other hash values, this value should be formatted as an uppercase hash.
@@ -202,6 +213,7 @@
     - name: server.hash.sha1
       type: keyword
       level: extended
+      short: Certificate fingerprint using the SHA1 digest of DER-encoded version of certificate offered by the server.
       description: >
         Certificate fingerprint using the SHA1 digest of DER-encoded version of certificate offered by the server.
         For consistency with other hash values, this value should be formatted as an uppercase hash.
@@ -210,6 +222,7 @@
     - name: server.hash.sha256
       type: keyword
       level: extended
+      short: Certificate fingerprint using the SHA256 digest of DER-encoded version of certificate offered by the server.
       description: >
         Certificate fingerprint using the SHA256 digest of DER-encoded version of certificate offered by the server.
         For consistency with other hash values, this value should be formatted as an uppercase hash.

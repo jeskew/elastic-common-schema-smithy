@@ -40,3 +40,4 @@ user.yml
 user_agent.yml
 vlan.yml
 vulnerability.yml
+x509.yml
